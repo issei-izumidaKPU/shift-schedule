@@ -8,6 +8,7 @@ import pandas as pd
 import aiofiles
 import os
 from dotenv import load_dotenv
+from employee_database import get_employee_email
 
 load_dotenv()
 
@@ -18,15 +19,12 @@ templates = Jinja2Templates(directory="templates")
 # This allows HTTP requests for OAuth (not recommended for production)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-# Herokuのドメイン名を使う
-HEROKU_DOMAIN = "https://shiftupload.herokuapp.com"
-
 @app.get("/", response_class=HTMLResponse)
 async def google_auth(request: Request):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
-        redirect_uri=f'{HEROKU_DOMAIN}/oauth2callback'
+        redirect_uri='http://localhost:8000/oauth2callback'
     )
     auth_url, _ = flow.authorization_url(access_type='offline', prompt='consent', include_granted_scopes='true')
     return RedirectResponse(url=auth_url)
@@ -36,7 +34,7 @@ async def oauth2callback(request: Request):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
-        redirect_uri=f'{HEROKU_DOMAIN}/oauth2callback'
+        redirect_uri='http://localhost:8000/oauth2callback'
     )
     flow.fetch_token(authorization_response=str(request.url))
     credentials = flow.credentials
@@ -70,6 +68,11 @@ async def upload_shift(file: UploadFile = File(...)):
     service = build('calendar', 'v3', credentials=creds)
 
     for col in df.columns[2:]:  # Assuming first two columns are date and day
+        employee_email = get_employee_email(col)
+        if not employee_email:
+            print(f"No email found for employee: {col}")
+            continue
+        
         for index, row in df.iterrows():
             if pd.notna(row[col]):
                 time_parts = row[col].split('-')
@@ -81,12 +84,12 @@ async def upload_shift(file: UploadFile = File(...)):
                 start_date_time = f"{date}T{start_time}:00+09:00"
                 end_date_time = f"{date}T{end_time}:00+09:00"
                 event = {
-                    'summary': f'Work Shift - {col}',
+                    'summary': f'バイト - {col}',
                     'start': {'dateTime': start_date_time, 'timeZone': 'Asia/Tokyo'},
                     'end': {'dateTime': end_date_time, 'timeZone': 'Asia/Tokyo'},
                 }
                 print("Event to be inserted:", event)  # Debugging: Print the event data
-                service.events().insert(calendarId='primary', body=event).execute()
+                service.events().insert(calendarId=employee_email, body=event).execute()
 
     return {"message": "Shifts successfully uploaded to Google Calendar"}
 
