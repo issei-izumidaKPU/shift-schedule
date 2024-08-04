@@ -18,7 +18,7 @@ templates = Jinja2Templates(directory="templates")
 # This allows HTTP requests for OAuth (not recommended for production)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-@app.get("/auth")
+@app.get("/", response_class=HTMLResponse)
 async def google_auth(request: Request):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
