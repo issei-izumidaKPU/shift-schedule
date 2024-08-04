@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shift Scheduler</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Shift Scheduler</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="employee">Select Employee:</label>
+        <select name="employee" id="employee">
+            <!-- 従業員名をオプションとして追加 -->
+            <option value="泉田">泉田</option>
+            <option value="田中">田中</option>
+            <!-- 他の従業員も追加 -->
+        </select>
+        <input type="file" name="file" accept=".xlsx">
+        <button type="submit">Upload</button>
+    </form>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

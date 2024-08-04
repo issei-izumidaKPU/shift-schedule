@@ -1,0 +1,5 @@
+# .env file
+.env
+
+# Token file
+.token.json
