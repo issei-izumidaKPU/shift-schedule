@@ -18,12 +18,15 @@ templates = Jinja2Templates(directory="templates")
 # This allows HTTP requests for OAuth (not recommended for production)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+# Herokuのドメイン名を使う
+HEROKU_DOMAIN = "https://shiftupload.herokuapp.com"
+
 @app.get("/", response_class=HTMLResponse)
 async def google_auth(request: Request):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
-        redirect_uri='http://localhost:8000/oauth2callback'
+        redirect_uri=f'{HEROKU_DOMAIN}/oauth2callback'
     )
     auth_url, _ = flow.authorization_url(access_type='offline', prompt='consent', include_granted_scopes='true')
     return RedirectResponse(url=auth_url)
@@ -33,7 +36,7 @@ async def oauth2callback(request: Request):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
-        redirect_uri='http://localhost:8000/oauth2callback'
+        redirect_uri=f'{HEROKU_DOMAIN}/oauth2callback'
     )
     flow.fetch_token(authorization_response=str(request.url))
     credentials = flow.credentials
